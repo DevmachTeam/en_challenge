@@ -1,0 +1,56 @@
+-Öncelikle Kolay Gelsin 
+Normalde symfony,laravel,codeigniter şeklinde gönderim yapıcaktım ancak ik görüşmesinde de söyledim mevcutta çalışıyorum ve grup şirketlerinden birine
+desteğe geldim bu sebepten pure olarak yazılan scripti mvc yapısına çevirecek vaktim olmadı direk mvc başlamamamın sebebi ise mevcut desteğe gittiğim şirkette
+herhangi bir framework kullanılmıyor ve iş harici bir süreçte yetişemeyebilirdi.Bende çalışır bir hale geitirip mvc ye geçiririm diye düşündüm ancak yoğunluktan yetiştiremedim.
+Ancak kontrolden sonra isterseniz framework de ekleyip gönderebilirim.
+
+"inc" klasöründe require işlemler var config loader vb. işlem dosyaları bu klasörde
+"cron" klasöründe opsiyonel çalıştırmaya bırakılmış mock server endpointleri ve type lar var
+"classes" klasöründe Service işlemleri ve Sonuç işlemlerini gösteren classlar var
+"view" klasöründe template bölümü var
+
+
+cron/task.php den gerekli değerler Services classına gönderiliyor
+
+Service classında Task adında bir interface var GTask methodu arayüz nesnemiz tanımlanıyor
+N kadar servis ekleme durumunda type ve task adapter kullanılıyor ben burada mevcut iki provider haricinde gelenleri
+sadece desen düzenlemesi yapılacak şekilde TaskAdapter classına gönderiyorum diğer iki provider ise desenlerine göre 
+diğer methodlara miras bırakılıp mükerrer kayıt kontrolü ile veritabanı kaydı yapılıp servis bitiyor.
+
+Aslında burada mevcut yapıda desen haricinde birşey değişmiyorsa örenğin bir authentication vs. işlemler olmuyorsa Adapter Pattern kullanmayada gerek görmüyorum 
+ancak istenildiği için yaptım.
+
+Report classında bizim geliştiricilerin genel toplamı, zorluk derecelerine göre ve etkileşimli şekilde yapmış oldukları iş sürecinin hesap ve listelenmesi var.
+
+Öncelikle zorluk derecesine göre gruplanan işlerin, developerlardaki derecelere göre eşleşmesinden hangi level işten kaç saatlik işin geldiği ve derecelerine göre
+nekadar sürede bitirdikleri listeleniyor.
+
+Biz sure bazlı zorlukları bildiğimiz için saatlik iş bitime farklarını da bilmiş oluoyruz Örneğin;
+
+5 level dev. için {"4":"3","3":"8","2":"18","1":"48"} json tutuyorum.Buradaki key  bir önceki developerın leveli ,değer ise 
+saatlik iş fakının dakika cinsi , bu minvalde  formatımızı şu sekilde çevirdiğimizde 
+
+5.level için {"4":"3","3":"8","2":"18","1":"48"}
+4.level için {"3":"5","2":"15","1":"45"}
+3.level için {"2":"10","1":"40"}
+2.level için {"1":"30"}
+1.level için {"0":"60"}
+
+Daha sonra developer tablosuna zorluk derecelerine göre toplam iş saatleri güncelleniyor
+Burada minimum saat baz alınarak ilk işi biten developer belirleniyor ve toplam iş saati diğer developerlardan düşülüyor
+Elimizde işini bitiren bir developer kalıyor diğerlerine yardım ederek minimum sürede işi bitirmesi lazım ancak 
+kendinden daha yüksek leveldakilere yardım etmesi vakit yönetimi konusunda vakti uzatacağından dolayı (level-1) durumunda ilerlemelidir.
+Levellar arasındaki iş bitime sürelerinde ki farkları bildiğimiz için yapacağımız işlem kendisinden büyük level ve kendisinin bir işi ne kadar sürede bitireceğidir
+bu -1 level şeklinde ilerlediğinde ve aradaki dakika farkları mevcut saatten çıkarıldığında sağlanan eşitlik kişi sayısına bölünerek toplam harcanan saati bize verecektir.
+
+en minimum saat 157 olsun bu işi 5 level bir developer bitirdi diğer tüm developer lar 157 saat onunla beraber çalıştı ve  ellerinde iş kaldı
+4.developerın elinde 52 saatlik 4 level iş kaldı 5 developer ise json a göre saat başı 3 dakika erken bitiriyor 
+
+52 saatte, 156 dakika  yani 2,6 saat daha çabuk bitiriyor yuvarlak hesap çalıştığımzda 52 saatlik işte 4 ile 5 arasında 3 saatlik bir fark var
+
+yani ikisinin eşit çalışması 49 saat oluyor buda yuvarlak hesap ile 25 saat çalışılıp 52 saatlik iş bitiriliyor.Bu çalışılan süre diğer
+developerladan da çıkarılıp işlem bu doğrultuda devam ediyor.
+
+İş saatleri 0 olanlar 5 ve 4 level kendisinden aşağıdaki levela yukarıdaki zaman farklaının da dahil edildiği şekilde yardım ederek minimum sürede süreci bitiriyorlar.
+
+Not:tüm işlemlerde yuvarlama yapılmıştır.
